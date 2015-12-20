@@ -26,18 +26,10 @@ volVectorField U
  mesh
  );
   
-volScalarField alphas
-( 
-   IOobject
- (
-  "alphas",
-  runTime.timeName(),
-  mesh,
-  IOobject::MUST_READ,
-  IOobject::AUTO_WRITE
-  ),
- mesh
-);
+
+
+
+
 #include "createPhi.H"
 
 
@@ -83,6 +75,7 @@ dimensionedScalar DCl(transportProperties.lookup("DCl"));
 dimensionedScalar DCs(transportProperties.lookup("DCs"));
 
 dimensionedScalar rhos(transportProperties.lookup("rhos"));
+
 dimensionedScalar cps(transportProperties.lookup("cps"));
 dimensionedScalar cpl(transportProperties.lookup("cpl"));
 dimensionedScalar cpg(transportProperties.lookup("cpg"));
@@ -163,10 +156,27 @@ volScalarField T
 );
 
 
-volScalarField fl ("fl", max(min((T-Ts)/(Tl-Ts),scalar(1)),scalar(0)));
-volScalarField fs ("fs", scalar(1) - fl);
-volScalarField Tcorr("Tcorr", (Tl-Ts)*fl + Ts);
-Tcorr = (Tl-Ts)*fl+Ts;
+
+
+volScalarField alphal
+(
+   IOobject
+ (
+  "alphal",
+  runTime.timeName(),
+  mesh,
+  IOobject::MUST_READ,
+  IOobject::AUTO_WRITE
+  ),
+ max(min((T-Ts)/(Tl-Ts),scalar(1)),scalar(0))
+);
+alphal.write();
+volScalarField alphas ("alphas", scalar(1)-alphal);
+alphas.write();
+
+volScalarField Tcorr("Tcorr", (Tl-Ts)*alphal + Ts);
+//volScalarField alpha1fl("alpha1fl",alpha1*fl);
+
 
 volScalarField DC
    (
@@ -181,7 +191,7 @@ volScalarField DC
 
    volScalarField lambda
    (
-       IOobject
+     IOobject
        (
            "lambda",
            runTime.timeName(),
@@ -190,6 +200,11 @@ volScalarField DC
        alpha1*lambdal + alpha2*lambdas
    );
 
+/*   dimensionedScalar DT
+(
+transportProperties.lookup("DT")
+);
+ */
    volScalarField cp
    (
        IOobject
@@ -227,7 +242,7 @@ volScalarField DC
            IOobject::NO_READ,
            IOobject::AUTO_WRITE
        ),
-       cp*(T-Tmelt) + alpha1*L
+       cp*(T-Tmelt) + alpha1*alphal*L
    );
    h.write();
 

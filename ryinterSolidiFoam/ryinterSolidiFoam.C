@@ -122,6 +122,7 @@ int main(int argc, char *argv[])
             }
         }
         #include "TEqn.H"
+
         runTime.write();
 
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
